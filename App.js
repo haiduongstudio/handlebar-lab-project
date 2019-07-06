@@ -84,6 +84,17 @@ const validationSchema = yup.object().shape({
     .test('is-true', 'Must agree to terms to continue', value => value === true)
 });
 
+const signUp = ({ email }) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (email === 'a@a.com') {
+        reject(new Error('You playin with that fake email address.'));
+      }
+      resolve(true);
+    }, 1000);
+  });
+};
+
 export default function App() {
   return (
     <SafeAreaView style={{ marginTop: 90 }}>
@@ -94,11 +105,17 @@ export default function App() {
           confirmPassword: '',
           agreeToTerms: false
         }}
-        onSubmit={(value, actions) => {
-          alert(JSON.stringify(value));
-          setTimeout(() => {
-            actions.setSubmitting(false);
-          }, 1000);
+        onSubmit={(values, actions) => {
+          signUp({ email: values.email })
+            .then(() => {
+              alert(JSON.stringify(values));
+            })
+            .catch(error => {
+              actions.setFieldError('general', error.message);
+            })
+            .finally(() => {
+              actions.setSubmitting(false);
+            });
         }}
         validationSchema={validationSchema}
       >
@@ -133,7 +150,12 @@ export default function App() {
             {formikProps.isSubmitting ? (
               <ActivityIndicator />
             ) : (
-              <Button title="Submit" onPress={formikProps.handleSubmit} />
+              <React.Fragment>
+                <Button title="Submit" onPress={formikProps.handleSubmit} />
+                <Text style={{ color: 'red' }}>
+                  {formikProps.errors.general}
+                </Text>
+              </React.Fragment>
             )}
           </React.Fragment>
         )}
